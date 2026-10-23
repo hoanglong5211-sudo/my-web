@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hệ Thống Quản Lý Công Việc</title>
+    <title>Hệ Thống Quản Lý Công Việc (Real-time)</title>
     <style>
         :root {
             --bg-color: #f8fafc;
@@ -126,7 +126,6 @@
             display: flex;
             flex-direction: column;
             gap: 8px;
-            position: relative;
             animation: fadeIn 0.3s ease;
         }
 
@@ -180,8 +179,8 @@
 <body>
 
     <header>
-        <h1>Bảng Quản Lý Công Việc (Task Board)</h1>
-        <p>Phân chia, theo dõi tiến độ công việc hiệu quả mỗi ngày</p>
+        <h1>Bảng Quản Lý Công Việc Chung</h1>
+        <p>Đồng bộ thời gian thực - Mọi người cùng truy cập và chỉnh sửa</p>
     </header>
 
     <!-- Form thêm việc -->
@@ -192,44 +191,47 @@
             <option value="doing">Đang làm</option>
             <option value="done">Hoàn thành</option>
         </select>
-        <button onclick="addTask()">Thêm việc</button>
+        <button onclick="addNewTask()">Thêm việc</button>
     </div>
 
     <!-- Bảng Kanban chia cột -->
     <div class="board">
-        <!-- Cột 1: Cần làm -->
         <div class="column">
             <h2>Cần Làm <span class="badge-todo" id="count-todo">0</span></h2>
-            <div class="task-list" id="list-todo" ondragover="allowDrop(event)" ondrop="drop(event, 'todo')"></div>
+            <div class="task-list" id="list-todo"></div>
         </div>
-
-        <!-- Cột 2: Đang làm -->
         <div class="column">
             <h2>Đang Làm <span class="badge-doing" id="count-doing">0</span></h2>
-            <div class="task-list" id="list-doing" ondragover="allowDrop(event)" ondrop="drop(event, 'doing')"></div>
+            <div class="task-list" id="list-doing"></div>
         </div>
-
-        <!-- Cột 3: Đã hoàn thành -->
         <div class="column">
             <h2>Hoàn Thành <span class="badge-done" id="count-done">0</span></h2>
-            <div class="task-list" id="list-done" ondragover="allowDrop(event)" ondrop="drop(event, 'done')"></div>
+            <div class="task-list" id="list-done"></div>
         </div>
     </div>
 
-    <script>
-        // Lấy dữ liệu từ localStorage hoặc khởi tạo danh sách trống
-        let tasks = JSON.parse(localStorage.getItem('my_tasks')) || [
-            { id: 1, title: 'Học cách tạo trang web cơ bản', status: 'done' },
-            { id: 2, title: 'Đưa website lên GitHub Pages', status: 'doing' },
-            { id: 3, title: 'Lên kế hoạch phát triển dự án mới', status: 'todo' }
-        ];
+    <!-- Nhập thư viện Firebase (Modular SDK) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, deleteDoc, doc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        function saveAndRender() {
-            localStorage.setItem('my_tasks', JSON.stringify(tasks));
-            renderTasks();
-        }
+        // Cấu hình Firebase của bạn
+        const firebaseConfig = {
+            apiKey: "AIzaSyAmty3V-3N6CK_Rz1sv2c1cfNxrju4DUW",
+            authDomain: "baocao-941b5.firebaseapp.com",
+            projectId: "baocao-941b5",
+            storageBucket: "baocao-941b5.firebasestorage.app",
+            messagingSenderId: "929572982678",
+            appId: "1:929572982678:web:b5e6c05ffc2fa31fa1d7b7",
+            measurementId: "G-3G1EGVP41K"
+        };
 
-        function addTask() {
+        // Khởi tạo Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Hàm thêm công việc lên Firestore
+        window.addNewTask = async function() {
             const input = document.getElementById('taskInput');
             const statusSelect = document.getElementById('taskStatus');
             const title = input.value.trim();
@@ -239,31 +241,41 @@
                 return;
             }
 
-            const newTask = {
-                id: Date.now(),
-                title: title,
-                status: statusSelect.value
-            };
-
-            tasks.push(newTask);
-            input.value = '';
-            saveAndRender();
-        }
-
-        function deleteTask(id) {
-            tasks = tasks.filter(task => task.id !== id);
-            saveAndRender();
-        }
-
-        function changeStatus(id, newStatus) {
-            const task = tasks.find(t => t.id === id);
-            if (task) {
-                task.status = newStatus;
-                saveAndRender();
+            try {
+                await addDoc(collection(db, "tasks"), {
+                    title: title,
+                    status: statusSelect.value,
+                    createdAt: Date.now()
+                });
+                input.value = '';
+            } catch (e) {
+                console.error("Lỗi khi thêm công việc: ", e);
             }
-        }
+        };
 
-        function renderTasks() {
+        // Hàm xóa công việc
+        window.deleteTask = async function(id) {
+            try {
+                await deleteDoc(doc(db, "tasks", id));
+            } catch (e) {
+                console.error("Lỗi khi xóa: ", e);
+            }
+        };
+
+        // Hàm đổi trạng thái công việc
+        window.changeStatus = async function(id, newStatus) {
+            try {
+                const taskRef = doc(db, "tasks", id);
+                await updateDoc(taskRef, {
+                    status: newStatus
+                });
+            } catch (e) {
+                console.error("Lỗi khi cập nhật trạng thái: ", e);
+            }
+        };
+
+        // Lắng nghe dữ liệu thời gian thực (Real-time listener) từ Firebase
+        onSnapshot(collection(db, "tasks"), (snapshot) => {
             const listTodo = document.getElementById('list-todo');
             const listDoing = document.getElementById('list-doing');
             const listDone = document.getElementById('list-done');
@@ -274,32 +286,33 @@
 
             let countTodo = 0, countDoing = 0, countDone = 0;
 
-            tasks.forEach(task => {
+            snapshot.forEach((docSnap) => {
+                const task = docSnap.data();
+                const id = docSnap.id;
+
                 const card = document.createElement('div');
                 card.className = 'task-card';
-                card.draggable = true;
-                card.ondragstart = (e) => e.dataTransfer.setData('text/plain', task.id);
 
                 let moveButtons = '';
                 if (task.status === 'todo') {
                     countTodo++;
-                    moveButtons = `<button class="btn-move" onclick="changeStatus(${task.id}, 'doing')">Bắt đầu ➔</button>`;
+                    moveButtons = `<button class="btn-move" onclick="changeStatus('${id}', 'doing')">Bắt đầu ➔</button>`;
                 } else if (task.status === 'doing') {
                     countDoing++;
                     moveButtons = `
-                        <button class="btn-move" onclick="changeStatus(${task.id}, 'todo')">⬅ Quay lại</button>
-                        <button class="btn-move" onclick="changeStatus(${task.id}, 'done')">Xong ➔</button>
+                        <button class="btn-move" onclick="changeStatus('${id}', 'todo')">⬅ Quay lại</button>
+                        <button class="btn-move" onclick="changeStatus('${id}', 'done')">Xong ➔</button>
                     `;
                 } else {
                     countDone++;
-                    moveButtons = `<button class="btn-move" onclick="changeStatus(${task.id}, 'doing')">⬅ Làm lại</button>`;
+                    moveButtons = `<button class="btn-move" onclick="changeStatus('${id}', 'doing')">⬅ Làm lại</button>`;
                 }
 
                 card.innerHTML = `
                     <div class="task-title">${escapeHtml(task.title)}</div>
                     <div class="task-actions">
                         ${moveButtons}
-                        <button class="btn-delete" onclick="deleteTask(${task.id})">Xóa</button>
+                        <button class="btn-delete" onclick="deleteTask('${id}')">Xóa</button>
                     </div>
                 `;
 
@@ -311,28 +324,11 @@
             document.getElementById('count-todo').innerText = countTodo;
             document.getElementById('count-doing').innerText = countDoing;
             document.getElementById('count-done').innerText = countDone;
-        }
-
-        function allowDrop(ev) {
-            ev.preventDefault();
-        }
-
-        function drop(ev, newStatus) {
-            ev.preventDefault();
-            const taskId = ev.dataTransfer.getData('text/plain');
-            const task = tasks.find(t => t.id == taskId);
-            if (task) {
-                task.status = newStatus;
-                saveAndRender();
-            }
-        }
+        });
 
         function escapeHtml(text) {
             return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
         }
-
-        // Chạy lần đầu khi mở trang
-        renderTasks();
     </script>
 </body>
 </html>

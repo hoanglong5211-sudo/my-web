@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ Thống Quản Lý Công Việc</title>
+    <style>
+        :root {
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-color: #1e293b;
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --border-color: #e2e8f0;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        header h1 {
+            margin: 0 0 10px 0;
+            color: #0f172a;
+        }
+
+        header p {
+            color: #64748b;
+            margin: 0;
+        }
+
+        .task-form {
+            max-width: 600px;
+            margin: 0 auto 30px auto;
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            display: flex;
+            gap: 10px;
+        }
+
+        .task-form input, .task-form select {
+            padding: 10px 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+        }
+
+        .task-form input[type="text"] {
+            flex: 2;
+        }
+
+        .task-form select {
+            flex: 1;
+        }
+
+        .task-form button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+
+        .task-form button:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .board {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .column {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: var(--shadow);
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .column h2 {
+            font-size: 18px;
+            margin-top: 0;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .task-list {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 10px;
+            min-height: 200px;
+        }
+
+        .task-card {
+            background: #f8fafc;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            position: relative;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .task-title {
+            font-weight: 600;
+            word-break: break-word;
+        }
+
+        .task-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            margin-top: 5px;
+        }
+
+        .task-actions button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 13px;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+
+        .btn-move {
+            background-color: #e2e8f0;
+            color: #334155;
+        }
+        .btn-move:hover {
+            background-color: #cbd5e1;
+        }
+
+        .btn-delete {
+            background-color: #fee2e2;
+            color: #dc2626;
+        }
+        .btn-delete:hover {
+            background-color: #fecaca;
+        }
+
+        .badge-todo { color: #d97706; background: #fef3c7; padding: 2px 8px; border-radius: 12px; font-size: 12px; }
+        .badge-doing { color: #2563eb; background: #dbeafe; padding: 2px 8px; border-radius: 12px; font-size: 12px; }
+        .badge-done { color: #16a34a; background: #dcfce7; padding: 2px 8px; border-radius: 12px; font-size: 12px; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Bảng Quản Lý Công Việc (Task Board)</h1>
+        <p>Phân chia, theo dõi tiến độ công việc hiệu quả mỗi ngày</p>
+    </header>
+
+    <!-- Form thêm việc -->
+    <div class="task-form">
+        <input type="text" id="taskInput" placeholder="Nhập tên công việc mới...">
+        <select id="taskStatus">
+            <option value="todo">Cần làm</option>
+            <option value="doing">Đang làm</option>
+            <option value="done">Hoàn thành</option>
+        </select>
+        <button onclick="addTask()">Thêm việc</button>
+    </div>
+
+    <!-- Bảng Kanban chia cột -->
+    <div class="board">
+        <!-- Cột 1: Cần làm -->
+        <div class="column">
+            <h2>Cần Làm <span class="badge-todo" id="count-todo">0</span></h2>
+            <div class="task-list" id="list-todo" ondragover="allowDrop(event)" ondrop="drop(event, 'todo')"></div>
+        </div>
+
+        <!-- Cột 2: Đang làm -->
+        <div class="column">
+            <h2>Đang Làm <span class="badge-doing" id="count-doing">0</span></h2>
+            <div class="task-list" id="list-doing" ondragover="allowDrop(event)" ondrop="drop(event, 'doing')"></div>
+        </div>
+
+        <!-- Cột 3: Đã hoàn thành -->
+        <div class="column">
+            <h2>Hoàn Thành <span class="badge-done" id="count-done">0</span></h2>
+            <div class="task-list" id="list-done" ondragover="allowDrop(event)" ondrop="drop(event, 'done')"></div>
+        </div>
+    </div>
+
+    <script>
+        // Lấy dữ liệu từ localStorage hoặc khởi tạo danh sách trống
+        let tasks = JSON.parse(localStorage.getItem('my_tasks')) || [
+            { id: 1, title: 'Học cách tạo trang web cơ bản', status: 'done' },
+            { id: 2, title: 'Đưa website lên GitHub Pages', status: 'doing' },
+            { id: 3, title: 'Lên kế hoạch phát triển dự án mới', status: 'todo' }
+        ];
+
+        function saveAndRender() {
+            localStorage.setItem('my_tasks', JSON.stringify(tasks));
+            renderTasks();
+        }
+
+        function addTask() {
+            const input = document.getElementById('taskInput');
+            const statusSelect = document.getElementById('taskStatus');
+            const title = input.value.trim();
+
+            if (!title) {
+                alert('Vui lòng nhập tên công việc!');
+                return;
+            }
+
+            const newTask = {
+                id: Date.now(),
+                title: title,
+                status: statusSelect.value
+            };
+
+            tasks.push(newTask);
+            input.value = '';
+            saveAndRender();
+        }
+
+        function deleteTask(id) {
+            tasks = tasks.filter(task => task.id !== id);
+            saveAndRender();
+        }
+
+        function changeStatus(id, newStatus) {
+            const task = tasks.find(t => t.id === id);
+            if (task) {
+                task.status = newStatus;
+                saveAndRender();
+            }
+        }
+
+        function renderTasks() {
+            const listTodo = document.getElementById('list-todo');
+            const listDoing = document.getElementById('list-doing');
+            const listDone = document.getElementById('list-done');
+
+            listTodo.innerHTML = '';
+            listDoing.innerHTML = '';
+            listDone.innerHTML = '';
+
+            let countTodo = 0, countDoing = 0, countDone = 0;
+
+            tasks.forEach(task => {
+                const card = document.createElement('div');
+                card.className = 'task-card';
+                card.draggable = true;
+                card.ondragstart = (e) => e.dataTransfer.setData('text/plain', task.id);
+
+                let moveButtons = '';
+                if (task.status === 'todo') {
+                    countTodo++;
+                    moveButtons = `<button class="btn-move" onclick="changeStatus(${task.id}, 'doing')">Bắt đầu ➔</button>`;
+                } else if (task.status === 'doing') {
+                    countDoing++;
+                    moveButtons = `
+                        <button class="btn-move" onclick="changeStatus(${task.id}, 'todo')">⬅ Quay lại</button>
+                        <button class="btn-move" onclick="changeStatus(${task.id}, 'done')">Xong ➔</button>
+                    `;
+                } else {
+                    countDone++;
+                    moveButtons = `<button class="btn-move" onclick="changeStatus(${task.id}, 'doing')">⬅ Làm lại</button>`;
+                }
+
+                card.innerHTML = `
+                    <div class="task-title">${escapeHtml(task.title)}</div>
+                    <div class="task-actions">
+                        ${moveButtons}
+                        <button class="btn-delete" onclick="deleteTask(${task.id})">Xóa</button>
+                    </div>
+                `;
+
+                if (task.status === 'todo') listTodo.appendChild(card);
+                else if (task.status === 'doing') listDoing.appendChild(card);
+                else listDone.appendChild(card);
+            });
+
+            document.getElementById('count-todo').innerText = countTodo;
+            document.getElementById('count-doing').innerText = countDoing;
+            document.getElementById('count-done').innerText = countDone;
+        }
+
+        function allowDrop(ev) {
+            ev.preventDefault();
+        }
+
+        function drop(ev, newStatus) {
+            ev.preventDefault();
+            const taskId = ev.dataTransfer.getData('text/plain');
+            const task = tasks.find(t => t.id == taskId);
+            if (task) {
+                task.status = newStatus;
+                saveAndRender();
+            }
+        }
+
+        function escapeHtml(text) {
+            return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+
+        // Chạy lần đầu khi mở trang
+        renderTasks();
+    </script>
+</body>
+</html>

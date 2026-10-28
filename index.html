@@ -3,217 +3,476 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hệ Thống Quản Lý Công Việc (Real-time)</title>
+    <title>Quản Lý Sản Xuất Cửa Nhôm Kính</title>
     <style>
         :root {
-            --bg-color: #f8fafc;
-            --card-bg: #ffffff;
-            --text-color: #1e293b;
-            --primary: #3b82f6;
-            --primary-hover: #2563eb;
-            --border-color: #e2e8f0;
-            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --bg: #f1f5f9;
+            --card: #ffffff;
+            --text: #1e293b;
+            --muted: #64748b;
+            --primary: #0f4c81;
+            --primary-hover: #0b3a63;
+            --border: #e2e8f0;
+            --danger: #dc2626;
+            --danger-bg: #fee2e2;
+            --shadow: 0 1px 3px rgba(15, 23, 42, 0.08), 0 4px 12px rgba(15, 23, 42, 0.05);
         }
+
+        * { box-sizing: border-box; }
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
+            background: var(--bg);
+            color: var(--text);
             margin: 0;
-            padding: 20px;
+            font-size: 14px;
         }
 
-        header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
+        .hidden { display: none !important; }
 
-        header h1 {
-            margin: 0 0 10px 0;
-            color: #0f172a;
-        }
-
-        header p {
-            color: #64748b;
-            margin: 0;
-        }
-
-        .task-form {
-            max-width: 600px;
-            margin: 0 auto 30px auto;
-            background: var(--card-bg);
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: var(--shadow);
+        /* ---------- Thanh tiêu đề ---------- */
+        .topbar {
+            background: linear-gradient(135deg, #0f4c81, #1e6fb5);
+            color: #fff;
+            padding: 16px 20px;
             display: flex;
-            gap: 10px;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
         }
 
-        .task-form input, .task-form select {
-            padding: 10px 15px;
-            border: 1px solid var(--border-color);
+        .brand { display: flex; align-items: center; gap: 12px; }
+
+        .logo {
+            width: 42px;
+            height: 42px;
+            border: 3px solid rgba(255, 255, 255, 0.85);
+            border-radius: 6px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3px;
+            padding: 3px;
+        }
+        .logo span { background: rgba(255, 255, 255, 0.35); border-radius: 2px; }
+
+        .brand h1 { margin: 0; font-size: 20px; }
+        .brand p { margin: 2px 0 0; font-size: 13px; opacity: 0.85; }
+
+        main { max-width: 1700px; margin: 0 auto; padding: 20px; }
+
+        /* ---------- Nút ---------- */
+        .btn {
+            border: none;
+            border-radius: 8px;
+            padding: 9px 16px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-family: inherit;
+        }
+        .btn:disabled { opacity: 0.6; cursor: wait; }
+        .btn-primary { background: var(--primary); color: #fff; }
+        .btn-primary:hover { background: var(--primary-hover); }
+        .topbar .btn-primary { background: #fff; color: var(--primary); }
+        .topbar .btn-primary:hover { background: #e0ecf8; }
+        .btn-light { background: #e2e8f0; color: #334155; }
+        .btn-light:hover { background: #cbd5e1; }
+        .btn-danger { background: var(--danger-bg); color: var(--danger); }
+        .btn-danger:hover { background: #fecaca; }
+
+        .icon-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            color: var(--muted);
+            padding: 4px 8px;
+            border-radius: 6px;
+        }
+        .icon-btn:hover { background: #f1f5f9; color: var(--text); }
+
+        /* ---------- Thống kê ---------- */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        .stat {
+            background: var(--card);
+            border-radius: 10px;
+            padding: 14px 16px;
+            box-shadow: var(--shadow);
+            border-left: 4px solid var(--primary);
+        }
+        .stat-label { display: block; color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.03em; }
+        .stat strong { display: block; font-size: 22px; margin-top: 4px; }
+        .stat.danger { border-left-color: var(--danger); }
+        .stat.danger strong { color: var(--danger); }
+
+        /* ---------- Thanh công cụ ---------- */
+        .toolbar {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+        .toolbar input[type="search"] {
+            flex: 1;
+            min-width: 220px;
+            max-width: 420px;
+            padding: 10px 14px;
+            border: 1px solid var(--border);
             border-radius: 8px;
             font-size: 14px;
             outline: none;
         }
+        .toolbar input[type="search"]:focus { border-color: var(--primary); }
+        .check { display: flex; align-items: center; gap: 6px; cursor: pointer; color: #334155; }
 
-        .task-form input[type="text"] {
-            flex: 2;
-        }
-
-        .task-form select {
-            flex: 1;
-        }
-
-        .task-form button {
-            background-color: var(--primary);
-            color: white;
-            border: none;
-            padding: 10px 20px;
+        .error {
+            background: var(--danger-bg);
+            color: #991b1b;
             border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: background 0.2s;
+            padding: 12px 16px;
+            margin-bottom: 16px;
         }
 
-        .task-form button:hover {
-            background-color: var(--primary-hover);
-        }
-
+        /* ---------- Bảng công đoạn ---------- */
         .board {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-            max-width: 1200px;
-            margin: 0 auto;
+            grid-auto-flow: column;
+            grid-auto-columns: minmax(260px, 1fr);
+            gap: 14px;
+            overflow-x: auto;
+            padding-bottom: 10px;
+            align-items: start;
         }
 
         .column {
-            background: var(--card-bg);
+            background: #e8eef5;
             border-radius: 12px;
-            padding: 20px;
-            box-shadow: var(--shadow);
-            min-height: 400px;
-            display: flex;
-            flex-direction: column;
+            padding: 12px;
+            min-height: 300px;
+            border-top: 4px solid var(--stage);
         }
 
-        .column h2 {
-            font-size: 18px;
-            margin-top: 0;
-            padding-bottom: 10px;
-            border-bottom: 2px solid var(--border-color);
+        .column-head { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+        .column-head h2 { font-size: 15px; margin: 0; flex: 1; }
+        .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--stage); }
+        .count {
+            background: var(--card);
+            color: var(--muted);
+            font-weight: 700;
+            font-size: 12px;
+            border-radius: 12px;
+            padding: 2px 9px;
+        }
+
+        .column-body { display: flex; flex-direction: column; gap: 10px; }
+        .empty { color: #94a3b8; text-align: center; font-size: 13px; margin: 24px 0; }
+
+        .card {
+            background: var(--card);
+            border-radius: 10px;
+            padding: 12px;
+            box-shadow: var(--shadow);
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: border-color 0.15s;
+        }
+        .card:hover { border-color: #93c5fd; }
+        .card.overdue { border-color: #fca5a5; background: #fffafa; }
+
+        .card-top { display: flex; justify-content: space-between; align-items: center; gap: 6px; }
+        .code { font-family: Consolas, monospace; font-size: 12px; color: var(--muted); }
+        .customer { font-weight: 700; font-size: 15px; margin: 4px 0; word-break: break-word; }
+        .meta { color: var(--muted); font-size: 13px; }
+        .meta b { color: var(--text); }
+        .amount { font-weight: 700; color: var(--primary); margin-top: 6px; }
+
+        .tag { font-size: 11px; font-weight: 700; border-radius: 10px; padding: 2px 8px; }
+        .tag-danger { background: var(--danger-bg); color: var(--danger); }
+
+        .card-actions { display: flex; justify-content: flex-end; gap: 6px; margin-top: 10px; }
+        .btn-mini {
+            border: none;
+            background: #e2e8f0;
+            color: #334155;
+            border-radius: 6px;
+            padding: 5px 9px;
+            font-size: 12px;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        .btn-mini:hover { background: #cbd5e1; }
+        .btn-next { background: #dbeafe; color: #1d4ed8; font-weight: 600; }
+        .btn-next:hover { background: #bfdbfe; }
+
+        /* ---------- Hộp thoại ---------- */
+        dialog.modal {
+            border: none;
+            border-radius: 14px;
+            padding: 0;
+            width: min(980px, calc(100vw - 24px));
+            max-height: calc(100vh - 32px);
+            box-shadow: 0 20px 50px rgba(15, 23, 42, 0.3);
+            color: var(--text);
+        }
+        dialog.modal::backdrop { background: rgba(15, 23, 42, 0.5); }
+
+        .modal-inner { display: flex; flex-direction: column; max-height: calc(100vh - 32px); }
+        .modal-head {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
         }
-
-        .task-list {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            margin-top: 10px;
-            min-height: 200px;
-        }
-
-        .task-card {
-            background: #f8fafc;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 15px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            animation: fadeIn 0.3s ease;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-5px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .task-title {
-            font-weight: 600;
-            word-break: break-word;
-        }
-
-        .task-actions {
+        .modal-head h2 { margin: 0; font-size: 18px; }
+        .modal-body { padding: 16px 20px; overflow-y: auto; }
+        .modal-body h3 { font-size: 15px; margin: 18px 0 8px; }
+        .modal-foot {
             display: flex;
             justify-content: flex-end;
             gap: 8px;
-            margin-top: 5px;
+            padding: 14px 20px;
+            border-top: 1px solid var(--border);
+            flex-wrap: wrap;
+        }
+        .modal-foot .spacer { flex: 1; }
+
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .span-2 { grid-column: span 2; }
+
+        .modal label { display: flex; flex-direction: column; gap: 4px; font-weight: 600; font-size: 13px; color: #334155; }
+        .modal input, .modal select, .modal textarea {
+            padding: 8px 10px;
+            border: 1px solid var(--border);
+            border-radius: 7px;
+            font-size: 14px;
+            font-family: inherit;
+            font-weight: 400;
+            outline: none;
+            width: 100%;
+            background: #fff;
+        }
+        .modal input:focus, .modal select:focus, .modal textarea:focus { border-color: var(--primary); }
+
+        .items-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 10px; }
+        .items-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .items-table th {
+            background: #f8fafc;
+            text-align: left;
+            padding: 8px;
+            font-weight: 600;
+            color: #475569;
+            white-space: nowrap;
+            border-bottom: 1px solid var(--border);
+        }
+        .items-table td { padding: 6px 8px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+        .items-table tr:last-child td { border-bottom: none; }
+        .items-table .num { text-align: right; white-space: nowrap; }
+        .items-table select { min-width: 150px; }
+        .items-table input[type="number"] { min-width: 80px; }
+        .items-table .row-amount { font-weight: 600; text-align: right; white-space: nowrap; }
+
+        .form-total { text-align: right; margin: 6px 0 14px; font-size: 15px; }
+        .form-total strong { color: var(--primary); font-size: 17px; }
+
+        /* Chi tiết đơn */
+        .progress { display: flex; gap: 4px; margin-bottom: 18px; overflow-x: auto; }
+        .step {
+            flex: 1;
+            min-width: 92px;
+            text-align: center;
+            font-size: 12px;
+            color: #94a3b8;
+            padding-top: 6px;
+            border-top: 4px solid #e2e8f0;
+        }
+        .step span {
+            display: inline-grid;
+            place-items: center;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: #e2e8f0;
+            color: #64748b;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        .step.done { border-top-color: #22c55e; color: #15803d; }
+        .step.done span { background: #22c55e; color: #fff; }
+        .step.current { border-top-color: var(--primary); color: var(--primary); font-weight: 700; }
+        .step.current span { background: var(--primary); color: #fff; }
+
+        .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px 20px; }
+        .info-grid div small { display: block; color: var(--muted); font-size: 12px; }
+        .info-grid a { color: var(--primary); }
+
+        .pay { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 14px; }
+        .pay div { background: #f8fafc; border-radius: 8px; padding: 10px 12px; }
+        .pay small { display: block; color: var(--muted); font-size: 12px; }
+        .pay strong { font-size: 16px; }
+        .pay .remain strong { color: var(--danger); }
+
+        .note-box { background: #fffbeb; border-radius: 8px; padding: 10px 12px; white-space: pre-wrap; }
+
+        .history { list-style: none; padding: 0; margin: 0; }
+        .history li { padding: 6px 0 6px 18px; border-left: 2px solid var(--border); position: relative; font-size: 13px; }
+        .history li::before {
+            content: '';
+            position: absolute;
+            left: -6px;
+            top: 11px;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--primary);
+        }
+        .history time { color: var(--muted); margin-left: 6px; }
+
+        #printArea { display: none; }
+
+        @media (max-width: 640px) {
+            main { padding: 14px; }
+            .grid-2 { grid-template-columns: 1fr; }
+            .span-2 { grid-column: span 1; }
+            .pay { grid-template-columns: 1fr; }
+            .modal-foot .btn { flex: 1; }
+            .modal-foot .spacer { display: none; }
         }
 
-        .task-actions button {
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-size: 13px;
-            padding: 4px 8px;
-            border-radius: 4px;
+        /* ---------- In lệnh sản xuất ---------- */
+        @media print {
+            body { background: #fff; }
+            body > *:not(#printArea) { display: none !important; }
+            #printArea { display: block; font-size: 13px; color: #000; }
+            #printArea h1 { font-size: 20px; text-align: center; margin: 0 0 4px; }
+            #printArea .sub { text-align: center; margin-bottom: 16px; }
+            #printArea table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+            #printArea th, #printArea td { border: 1px solid #000; padding: 5px 6px; text-align: left; }
+            #printArea .num { text-align: right; }
+            #printArea .info td { border: none; padding: 2px 6px; }
+            #printArea .sign { display: flex; justify-content: space-around; margin-top: 40px; text-align: center; }
+            #printArea .sign div { min-height: 90px; }
         }
-
-        .btn-move {
-            background-color: #e2e8f0;
-            color: #334155;
-        }
-        .btn-move:hover {
-            background-color: #cbd5e1;
-        }
-
-        .btn-delete {
-            background-color: #fee2e2;
-            color: #dc2626;
-        }
-        .btn-delete:hover {
-            background-color: #fecaca;
-        }
-
-        .badge-todo { color: #d97706; background: #fef3c7; padding: 2px 8px; border-radius: 12px; font-size: 12px; }
-        .badge-doing { color: #2563eb; background: #dbeafe; padding: 2px 8px; border-radius: 12px; font-size: 12px; }
-        .badge-done { color: #16a34a; background: #dcfce7; padding: 2px 8px; border-radius: 12px; font-size: 12px; }
     </style>
 </head>
 <body>
 
-    <header>
-        <h1>Bảng Quản Lý Công Việc Chung</h1>
-        <p>Đồng bộ thời gian thực - Mọi người cùng truy cập và chỉnh sửa</p>
+    <header class="topbar">
+        <div class="brand">
+            <div class="logo"><span></span><span></span><span></span><span></span></div>
+            <div>
+                <h1>Xưởng Nhôm Kính</h1>
+                <p>Quản lý đơn hàng &amp; tiến độ sản xuất - đồng bộ thời gian thực</p>
+            </div>
+        </div>
+        <button class="btn btn-primary" id="btnNewOrder">+ Đơn hàng mới</button>
     </header>
 
-    <!-- Form thêm việc -->
-    <div class="task-form">
-        <input type="text" id="taskInput" placeholder="Nhập tên công việc mới...">
-        <select id="taskStatus">
-            <option value="todo">Cần làm</option>
-            <option value="doing">Đang làm</option>
-            <option value="done">Hoàn thành</option>
-        </select>
-        <button onclick="addNewTask()">Thêm việc</button>
-    </div>
+    <main>
+        <section class="stats">
+            <div class="stat"><span class="stat-label">Tổng đơn hàng</span><strong id="statTotal">0</strong></div>
+            <div class="stat"><span class="stat-label">Đang sản xuất</span><strong id="statActive">0</strong></div>
+            <div class="stat danger"><span class="stat-label">Trễ hạn</span><strong id="statOverdue">0</strong></div>
+            <div class="stat"><span class="stat-label">Diện tích đang SX</span><strong id="statArea">0 m²</strong></div>
+            <div class="stat"><span class="stat-label">Tổng giá trị đơn</span><strong id="statRevenue">0 đ</strong></div>
+            <div class="stat"><span class="stat-label">Công nợ còn lại</span><strong id="statDebt">0 đ</strong></div>
+        </section>
 
-    <!-- Bảng Kanban chia cột -->
-    <div class="board">
-        <div class="column">
-            <h2>Cần Làm <span class="badge-todo" id="count-todo">0</span></h2>
-            <div class="task-list" id="list-todo"></div>
+        <section class="toolbar">
+            <input type="search" id="searchInput" placeholder="Tìm theo mã đơn, tên khách, SĐT, địa chỉ...">
+            <label class="check"><input type="checkbox" id="filterOverdue"> Chỉ hiện đơn trễ hạn</label>
+        </section>
+
+        <div id="errorBanner" class="error hidden"></div>
+
+        <section class="board" id="board">
+            <p class="empty">Đang tải dữ liệu...</p>
+        </section>
+    </main>
+
+    <!-- Hộp thoại thêm / sửa đơn hàng -->
+    <dialog id="orderDialog" class="modal">
+        <form id="orderForm" class="modal-inner" novalidate>
+            <div class="modal-head">
+                <h2 id="orderDialogTitle">Đơn hàng mới</h2>
+                <button type="button" class="icon-btn" data-close title="Đóng">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="grid-2">
+                    <label>Tên khách hàng *<input name="customer" required placeholder="VD: Anh Minh - Nhà phố Q.7"></label>
+                    <label>Số điện thoại<input name="phone" type="tel" placeholder="09xx xxx xxx"></label>
+                    <label class="span-2">Địa chỉ lắp đặt<input name="address" placeholder="Số nhà, đường, phường, quận..."></label>
+                    <label>Ngày giao dự kiến<input name="deadline" type="date"></label>
+                    <label>Màu nhôm<select name="color" id="colorSelect"></select></label>
+                    <label>Đặt cọc (đ)<input name="deposit" type="number" min="0" step="1000" value="0"></label>
+                </div>
+
+                <h3>Hạng mục sản phẩm</h3>
+                <div class="items-wrap">
+                    <table class="items-table">
+                        <thead>
+                            <tr>
+                                <th>Loại sản phẩm</th>
+                                <th>Hệ nhôm</th>
+                                <th>Loại kính</th>
+                                <th>Rộng (mm)</th>
+                                <th>Cao (mm)</th>
+                                <th>SL</th>
+                                <th>Đơn giá / m²</th>
+                                <th class="num">Thành tiền</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="itemRows"></tbody>
+                    </table>
+                </div>
+                <button type="button" class="btn btn-light" id="btnAddItem">+ Thêm hạng mục</button>
+                <div class="form-total">
+                    <span id="formArea">0 m²</span> · Tổng: <strong id="formTotal">0 đ</strong>
+                </div>
+
+                <label>Ghi chú<textarea name="note" rows="2" placeholder="Phụ kiện, yêu cầu riêng của khách..."></textarea></label>
+            </div>
+            <div class="modal-foot">
+                <button type="button" class="btn btn-light" data-close>Hủy</button>
+                <button type="submit" class="btn btn-primary" id="btnSave">Lưu đơn hàng</button>
+            </div>
+        </form>
+    </dialog>
+
+    <!-- Hộp thoại chi tiết đơn hàng -->
+    <dialog id="detailDialog" class="modal">
+        <div class="modal-inner">
+            <div class="modal-head">
+                <h2 id="detailTitle">Chi tiết đơn hàng</h2>
+                <button type="button" class="icon-btn" data-close title="Đóng">✕</button>
+            </div>
+            <div class="modal-body" id="detailBody"></div>
+            <div class="modal-foot">
+                <button type="button" class="btn btn-danger" id="btnDelete">Xóa đơn</button>
+                <span class="spacer"></span>
+                <button type="button" class="btn btn-light" id="btnPrint">In lệnh sản xuất</button>
+                <button type="button" class="btn btn-light" id="btnEdit">Sửa</button>
+                <button type="button" class="btn btn-primary" id="btnNextStage">Chuyển công đoạn ▶</button>
+            </div>
         </div>
-        <div class="column">
-            <h2>Đang Làm <span class="badge-doing" id="count-doing">0</span></h2>
-            <div class="task-list" id="list-doing"></div>
-        </div>
-        <div class="column">
-            <h2>Hoàn Thành <span class="badge-done" id="count-done">0</span></h2>
-            <div class="task-list" id="list-done"></div>
-        </div>
-    </div>
+    </dialog>
+
+    <!-- Vùng in lệnh sản xuất -->
+    <div id="printArea"></div>
 
     <!-- Nhập thư viện Firebase (Modular SDK) -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, deleteDoc, doc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, deleteDoc, doc, updateDoc, onSnapshot, arrayUnion } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         // Cấu hình Firebase của bạn
         const firebaseConfig = {
@@ -229,106 +488,526 @@
         // Khởi tạo Firebase
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+        const ordersCol = collection(db, "orders");
 
-        // Hàm thêm công việc lên Firestore
-        window.addNewTask = async function() {
-            const input = document.getElementById('taskInput');
-            const statusSelect = document.getElementById('taskStatus');
-            const title = input.value.trim();
+        // ---------- Danh mục ----------
+        const STAGES = [
+            { id: "measure", name: "Đo đạc - Thiết kế", color: "#0ea5e9" },
+            { id: "cutting", name: "Cắt nhôm", color: "#8b5cf6" },
+            { id: "assembly", name: "Gia công - Lắp ráp", color: "#f59e0b" },
+            { id: "glass", name: "Lắp kính", color: "#14b8a6" },
+            { id: "install", name: "Lắp đặt tại công trình", color: "#f97316" },
+            { id: "done", name: "Hoàn thành", color: "#22c55e" }
+        ];
 
-            if (!title) {
-                alert('Vui lòng nhập tên công việc!');
+        const PRODUCTS = [
+            "Cửa đi mở quay", "Cửa sổ mở quay", "Cửa sổ mở hất", "Cửa lùa (trượt)",
+            "Cửa xếp trượt", "Vách kính cố định", "Cửa kính cường lực", "Mặt dựng kính",
+            "Lan can kính", "Cabin tắm kính"
+        ];
+        const PROFILES = [
+            "Xingfa nhập khẩu", "Xingfa Việt Nam", "Việt Pháp", "PMA", "Owin", "Topal", "Không dùng nhôm"
+        ];
+        const GLASSES = [
+            "Kính cường lực 8mm", "Kính cường lực 10mm", "Kính cường lực 12mm",
+            "Kính dán an toàn 6.38mm", "Kính dán an toàn 8.38mm", "Kính hộp 5-9-5", "Kính mờ 5mm"
+        ];
+        const COLORS = ["Ghi xám", "Trắng sứ", "Nâu cafe", "Đen", "Vân gỗ"];
+
+        // ---------- Trạng thái ----------
+        let orders = [];
+        let editingId = null;
+        let detailId = null;
+
+        const $ = (sel) => document.querySelector(sel);
+        const board = $("#board");
+        const orderDialog = $("#orderDialog");
+        const orderForm = $("#orderForm");
+        const itemRows = $("#itemRows");
+        const detailDialog = $("#detailDialog");
+
+        // ---------- Hàm tiện ích ----------
+        function escapeHtml(value) {
+            return String(value ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+
+        const money = (n) => Math.round(n || 0).toLocaleString("vi-VN") + " đ";
+        const fmtArea = (n) => (n || 0).toLocaleString("vi-VN", { maximumFractionDigits: 2 }) + " m²";
+        const fmtLength = (n) => (n || 0).toLocaleString("vi-VN", { maximumFractionDigits: 2 }) + " m";
+
+        function fmtDate(str) {
+            if (!str) return "—";
+            const [y, m, d] = str.split("-");
+            return `${d}/${m}/${y}`;
+        }
+
+        function fmtDateTime(ts) {
+            return new Date(ts).toLocaleString("vi-VN", { hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit", year: "numeric" });
+        }
+
+        function todayStr() {
+            const d = new Date();
+            d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+            return d.toISOString().slice(0, 10);
+        }
+
+        function genCode() {
+            const d = new Date();
+            const p = (n) => String(n).padStart(2, "0");
+            const rand = Math.random().toString(36).slice(2, 6).toUpperCase();
+            return `DH${String(d.getFullYear()).slice(2)}${p(d.getMonth() + 1)}${p(d.getDate())}-${rand}`;
+        }
+
+        const stageIndex = (id) => Math.max(0, STAGES.findIndex((s) => s.id === id));
+        const stageName = (id) => STAGES[stageIndex(id)].name;
+
+        // Diện tích (m²) = Rộng × Cao (mm) / 1.000.000 × Số lượng
+        const itemArea = (it) => (Number(it.width) || 0) * (Number(it.height) || 0) / 1e6 * (Number(it.qty) || 0);
+        const itemAmount = (it) => itemArea(it) * (Number(it.price) || 0);
+
+        function orderTotals(o) {
+            const items = o.items || [];
+            const area = items.reduce((s, it) => s + itemArea(it), 0);
+            const total = items.reduce((s, it) => s + itemAmount(it), 0);
+            return { area, total, remaining: Math.max(0, total - (Number(o.deposit) || 0)) };
+        }
+
+        const isOverdue = (o) => Boolean(o.deadline) && o.stage !== "done" && o.deadline < todayStr();
+
+        function options(list, selected) {
+            const all = selected && !list.includes(selected) ? [selected, ...list] : list;
+            return all.map((v) => `<option${v === selected ? " selected" : ""}>${escapeHtml(v)}</option>`).join("");
+        }
+
+        function showError(msg) {
+            const el = $("#errorBanner");
+            el.textContent = msg;
+            el.classList.remove("hidden");
+        }
+
+        // ---------- Hiển thị bảng công đoạn ----------
+        function cardHtml(o) {
+            const idx = stageIndex(o.stage);
+            const { area, total } = orderTotals(o);
+            const overdue = isOverdue(o);
+            const id = escapeHtml(o.id);
+            const back = idx > 0
+                ? `<button class="btn-mini" data-action="back" data-id="${id}" title="Lùi về: ${escapeHtml(STAGES[idx - 1].name)}">◀</button>`
+                : "";
+            const next = idx < STAGES.length - 1
+                ? `<button class="btn-mini btn-next" data-action="next" data-id="${id}">${escapeHtml(STAGES[idx + 1].name)} ▶</button>`
+                : "";
+
+            return `
+                <article class="card ${overdue ? "overdue" : ""}" data-action="open" data-id="${id}">
+                    <div class="card-top">
+                        <span class="code">${escapeHtml(o.code)}</span>
+                        ${overdue ? '<span class="tag tag-danger">Trễ hạn</span>' : ""}
+                    </div>
+                    <div class="customer">${escapeHtml(o.customer)}</div>
+                    <div class="meta">${(o.items || []).length} hạng mục · ${fmtArea(area)}</div>
+                    <div class="meta">Giao: <b>${fmtDate(o.deadline)}</b></div>
+                    <div class="amount">${money(total)}</div>
+                    <div class="card-actions">${back}${next}</div>
+                </article>`;
+        }
+
+        function render() {
+            const q = $("#searchInput").value.trim().toLowerCase();
+            const onlyOverdue = $("#filterOverdue").checked;
+
+            const visible = orders.filter((o) => {
+                if (onlyOverdue && !isOverdue(o)) return false;
+                if (!q) return true;
+                return [o.code, o.customer, o.phone, o.address].some((v) => String(v || "").toLowerCase().includes(q));
+            });
+
+            board.innerHTML = STAGES.map((st) => {
+                const list = visible.filter((o) => o.stage === st.id);
+                return `
+                    <div class="column" style="--stage:${st.color}">
+                        <div class="column-head">
+                            <span class="dot"></span>
+                            <h2>${st.name}</h2>
+                            <span class="count">${list.length}</span>
+                        </div>
+                        <div class="column-body">
+                            ${list.map(cardHtml).join("") || '<p class="empty">Chưa có đơn</p>'}
+                        </div>
+                    </div>`;
+            }).join("");
+
+            renderStats();
+        }
+
+        function renderStats() {
+            const active = orders.filter((o) => o.stage !== "done");
+            let revenue = 0, debt = 0, activeArea = 0;
+            orders.forEach((o) => {
+                const t = orderTotals(o);
+                revenue += t.total;
+                debt += t.remaining;
+            });
+            active.forEach((o) => { activeArea += orderTotals(o).area; });
+
+            $("#statTotal").textContent = orders.length;
+            $("#statActive").textContent = active.length;
+            $("#statOverdue").textContent = orders.filter(isOverdue).length;
+            $("#statArea").textContent = fmtArea(activeArea);
+            $("#statRevenue").textContent = money(revenue);
+            $("#statDebt").textContent = money(debt);
+        }
+
+        // ---------- Chuyển công đoạn ----------
+        async function moveStage(id, dir) {
+            const o = orders.find((x) => x.id === id);
+            if (!o) return;
+            const target = STAGES[stageIndex(o.stage) + dir];
+            if (!target) return;
+            try {
+                await updateDoc(doc(db, "orders", id), {
+                    stage: target.id,
+                    history: arrayUnion({ stage: target.id, at: Date.now() })
+                });
+            } catch (e) {
+                console.error("Lỗi khi chuyển công đoạn: ", e);
+                alert("Không chuyển được công đoạn: " + e.message);
+            }
+        }
+
+        board.addEventListener("click", (e) => {
+            const el = e.target.closest("[data-action]");
+            if (!el) return;
+            const id = el.dataset.id;
+            if (el.dataset.action === "next") moveStage(id, 1);
+            else if (el.dataset.action === "back") moveStage(id, -1);
+            else openDetail(id);
+        });
+
+        $("#searchInput").addEventListener("input", render);
+        $("#filterOverdue").addEventListener("change", render);
+
+        // ---------- Form đơn hàng ----------
+        $("#colorSelect").innerHTML = options(COLORS, COLORS[0]);
+
+        function addItemRow(item = {}) {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+                <td><select data-f="product">${options(PRODUCTS, item.product)}</select></td>
+                <td><select data-f="profile">${options(PROFILES, item.profile)}</select></td>
+                <td><select data-f="glass">${options(GLASSES, item.glass)}</select></td>
+                <td><input data-f="width" type="number" min="0" step="1" value="${escapeHtml(item.width ?? "")}" placeholder="1200"></td>
+                <td><input data-f="height" type="number" min="0" step="1" value="${escapeHtml(item.height ?? "")}" placeholder="2200"></td>
+                <td><input data-f="qty" type="number" min="1" step="1" value="${escapeHtml(item.qty ?? 1)}"></td>
+                <td><input data-f="price" type="number" min="0" step="1000" value="${escapeHtml(item.price ?? "")}" placeholder="1800000"></td>
+                <td class="row-amount">0 đ</td>
+                <td><button type="button" class="icon-btn" data-remove title="Xóa dòng">✕</button></td>`;
+            itemRows.appendChild(tr);
+            recalcForm();
+        }
+
+        function readRow(tr) {
+            const get = (f) => tr.querySelector(`[data-f="${f}"]`).value;
+            return {
+                product: get("product"),
+                profile: get("profile"),
+                glass: get("glass"),
+                width: Number(get("width")) || 0,
+                height: Number(get("height")) || 0,
+                qty: Number(get("qty")) || 0,
+                price: Number(get("price")) || 0
+            };
+        }
+
+        const readItems = () => [...itemRows.querySelectorAll("tr")].map(readRow);
+
+        function recalcForm() {
+            let area = 0, total = 0;
+            itemRows.querySelectorAll("tr").forEach((tr) => {
+                const it = readRow(tr);
+                area += itemArea(it);
+                total += itemAmount(it);
+                tr.querySelector(".row-amount").textContent = money(itemAmount(it));
+            });
+            $("#formArea").textContent = fmtArea(area);
+            $("#formTotal").textContent = money(total);
+        }
+
+        itemRows.addEventListener("input", recalcForm);
+        itemRows.addEventListener("click", (e) => {
+            if (e.target.closest("[data-remove]")) {
+                e.target.closest("tr").remove();
+                recalcForm();
+            }
+        });
+        $("#btnAddItem").addEventListener("click", () => addItemRow());
+
+        function openOrderForm(o = null) {
+            editingId = o ? o.id : null;
+            orderForm.reset();
+            itemRows.innerHTML = "";
+            $("#orderDialogTitle").textContent = o ? `Sửa đơn hàng ${o.code}` : "Đơn hàng mới";
+
+            if (o) {
+                const f = orderForm.elements;
+                f.customer.value = o.customer || "";
+                f.phone.value = o.phone || "";
+                f.address.value = o.address || "";
+                f.deadline.value = o.deadline || "";
+                f.deposit.value = o.deposit || 0;
+                f.note.value = o.note || "";
+                $("#colorSelect").innerHTML = options(COLORS, o.color || COLORS[0]);
+                (o.items || []).forEach(addItemRow);
+            } else {
+                $("#colorSelect").innerHTML = options(COLORS, COLORS[0]);
+            }
+            if (!itemRows.children.length) addItemRow();
+            recalcForm();
+            orderDialog.showModal();
+        }
+
+        $("#btnNewOrder").addEventListener("click", () => openOrderForm());
+
+        orderForm.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const f = orderForm.elements;
+            const customer = f.customer.value.trim();
+            const items = readItems();
+
+            if (!customer) {
+                alert("Vui lòng nhập tên khách hàng!");
+                f.customer.focus();
+                return;
+            }
+            if (!items.length) {
+                alert("Vui lòng thêm ít nhất một hạng mục sản phẩm!");
+                return;
+            }
+            if (items.some((it) => !it.width || !it.height || !it.qty)) {
+                alert("Vui lòng nhập đủ kích thước Rộng, Cao và Số lượng cho từng hạng mục!");
                 return;
             }
 
+            const data = {
+                customer,
+                phone: f.phone.value.trim(),
+                address: f.address.value.trim(),
+                deadline: f.deadline.value,
+                color: f.color.value,
+                deposit: Number(f.deposit.value) || 0,
+                note: f.note.value.trim(),
+                items
+            };
+
+            const btn = $("#btnSave");
+            btn.disabled = true;
             try {
-                await addDoc(collection(db, "tasks"), {
-                    title: title,
-                    status: statusSelect.value,
-                    createdAt: Date.now()
-                });
-                input.value = '';
-            } catch (e) {
-                console.error("Lỗi khi thêm công việc: ", e);
-            }
-        };
-
-        // Hàm xóa công việc
-        window.deleteTask = async function(id) {
-            try {
-                await deleteDoc(doc(db, "tasks", id));
-            } catch (e) {
-                console.error("Lỗi khi xóa: ", e);
-            }
-        };
-
-        // Hàm đổi trạng thái công việc
-        window.changeStatus = async function(id, newStatus) {
-            try {
-                const taskRef = doc(db, "tasks", id);
-                await updateDoc(taskRef, {
-                    status: newStatus
-                });
-            } catch (e) {
-                console.error("Lỗi khi cập nhật trạng thái: ", e);
-            }
-        };
-
-        // Lắng nghe dữ liệu thời gian thực (Real-time listener) từ Firebase
-        onSnapshot(collection(db, "tasks"), (snapshot) => {
-            const listTodo = document.getElementById('list-todo');
-            const listDoing = document.getElementById('list-doing');
-            const listDone = document.getElementById('list-done');
-
-            listTodo.innerHTML = '';
-            listDoing.innerHTML = '';
-            listDone.innerHTML = '';
-
-            let countTodo = 0, countDoing = 0, countDone = 0;
-
-            snapshot.forEach((docSnap) => {
-                const task = docSnap.data();
-                const id = docSnap.id;
-
-                const card = document.createElement('div');
-                card.className = 'task-card';
-
-                let moveButtons = '';
-                if (task.status === 'todo') {
-                    countTodo++;
-                    moveButtons = `<button class="btn-move" onclick="changeStatus('${id}', 'doing')">Bắt đầu ➔</button>`;
-                } else if (task.status === 'doing') {
-                    countDoing++;
-                    moveButtons = `
-                        <button class="btn-move" onclick="changeStatus('${id}', 'todo')">⬅ Quay lại</button>
-                        <button class="btn-move" onclick="changeStatus('${id}', 'done')">Xong ➔</button>
-                    `;
+                if (editingId) {
+                    await updateDoc(doc(db, "orders", editingId), data);
                 } else {
-                    countDone++;
-                    moveButtons = `<button class="btn-move" onclick="changeStatus('${id}', 'doing')">⬅ Làm lại</button>`;
+                    const first = STAGES[0].id;
+                    await addDoc(ordersCol, {
+                        ...data,
+                        code: genCode(),
+                        stage: first,
+                        history: [{ stage: first, at: Date.now() }],
+                        createdAt: Date.now()
+                    });
                 }
-
-                card.innerHTML = `
-                    <div class="task-title">${escapeHtml(task.title)}</div>
-                    <div class="task-actions">
-                        ${moveButtons}
-                        <button class="btn-delete" onclick="deleteTask('${id}')">Xóa</button>
-                    </div>
-                `;
-
-                if (task.status === 'todo') listTodo.appendChild(card);
-                else if (task.status === 'doing') listDoing.appendChild(card);
-                else listDone.appendChild(card);
-            });
-
-            document.getElementById('count-todo').innerText = countTodo;
-            document.getElementById('count-doing').innerText = countDoing;
-            document.getElementById('count-done').innerText = countDone;
+                orderDialog.close();
+            } catch (err) {
+                console.error("Lỗi khi lưu đơn hàng: ", err);
+                alert("Không lưu được đơn hàng: " + err.message);
+            } finally {
+                btn.disabled = false;
+            }
         });
 
-        function escapeHtml(text) {
-            return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        // ---------- Chi tiết đơn hàng ----------
+        function openDetail(id) {
+            detailId = id;
+            renderDetail();
+            if (!detailDialog.open) detailDialog.showModal();
         }
+
+        function renderDetail() {
+            const o = orders.find((x) => x.id === detailId);
+            if (!o) {
+                if (detailDialog.open) detailDialog.close();
+                return;
+            }
+            const idx = stageIndex(o.stage);
+            const t = orderTotals(o);
+            const isLast = idx === STAGES.length - 1;
+
+            $("#detailTitle").textContent = `Đơn ${o.code} - ${o.customer}`;
+            $("#btnNextStage").classList.toggle("hidden", isLast);
+            if (!isLast) $("#btnNextStage").textContent = `${STAGES[idx + 1].name} ▶`;
+
+            const itemsHtml = (o.items || []).map((it, i) => `
+                <tr>
+                    <td>${i + 1}</td>
+                    <td>${escapeHtml(it.product)}</td>
+                    <td>${escapeHtml(it.profile)}</td>
+                    <td>${escapeHtml(it.glass)}</td>
+                    <td class="num">${escapeHtml(it.width)} × ${escapeHtml(it.height)}</td>
+                    <td class="num">${escapeHtml(it.qty)}</td>
+                    <td class="num">${fmtArea(itemArea(it))}</td>
+                    <td class="num">${money(it.price)}</td>
+                    <td class="num"><b>${money(itemAmount(it))}</b></td>
+                </tr>`).join("");
+
+            const historyHtml = (o.history || []).slice().reverse().map((h) => `
+                <li>${escapeHtml(stageName(h.stage))}<time>${fmtDateTime(h.at)}</time></li>`).join("");
+
+            const phone = o.phone
+                ? `<a href="tel:${escapeHtml(o.phone.replace(/\s/g, ""))}">${escapeHtml(o.phone)}</a>`
+                : "—";
+
+            $("#detailBody").innerHTML = `
+                <div class="progress">
+                    ${STAGES.map((s, i) => `
+                        <div class="step ${i < idx ? "done" : ""} ${i === idx ? "current" : ""}">
+                            <span>${i < idx ? "✓" : i + 1}</span><br>${s.name}
+                        </div>`).join("")}
+                </div>
+
+                <div class="info-grid">
+                    <div><small>Khách hàng</small>${escapeHtml(o.customer)}</div>
+                    <div><small>Điện thoại</small>${phone}</div>
+                    <div><small>Địa chỉ lắp đặt</small>${escapeHtml(o.address) || "—"}</div>
+                    <div><small>Ngày giao dự kiến</small>${fmtDate(o.deadline)} ${isOverdue(o) ? '<span class="tag tag-danger">Trễ hạn</span>' : ""}</div>
+                    <div><small>Màu nhôm</small>${escapeHtml(o.color) || "—"}</div>
+                    <div><small>Ngày tạo đơn</small>${o.createdAt ? fmtDateTime(o.createdAt) : "—"}</div>
+                </div>
+
+                <h3>Hạng mục sản phẩm</h3>
+                <div class="items-wrap">
+                    <table class="items-table">
+                        <thead>
+                            <tr><th>#</th><th>Loại sản phẩm</th><th>Hệ nhôm</th><th>Kính</th><th class="num">KT (mm)</th><th class="num">SL</th><th class="num">Diện tích</th><th class="num">Đơn giá/m²</th><th class="num">Thành tiền</th></tr>
+                        </thead>
+                        <tbody>${itemsHtml || '<tr><td colspan="9" class="empty">Chưa có hạng mục</td></tr>'}</tbody>
+                    </table>
+                </div>
+
+                <div class="pay">
+                    <div><small>Tổng giá trị (${fmtArea(t.area)})</small><strong>${money(t.total)}</strong></div>
+                    <div><small>Đã đặt cọc</small><strong>${money(o.deposit)}</strong></div>
+                    <div class="remain"><small>Còn phải thu</small><strong>${money(t.remaining)}</strong></div>
+                </div>
+
+                ${o.note ? `<h3>Ghi chú</h3><div class="note-box">${escapeHtml(o.note)}</div>` : ""}
+
+                <h3>Lịch sử công đoạn</h3>
+                <ul class="history">${historyHtml || "<li>Chưa có lịch sử</li>"}</ul>`;
+        }
+
+        $("#btnNextStage").addEventListener("click", () => moveStage(detailId, 1));
+
+        $("#btnEdit").addEventListener("click", () => {
+            const o = orders.find((x) => x.id === detailId);
+            if (!o) return;
+            detailDialog.close();
+            openOrderForm(o);
+        });
+
+        $("#btnDelete").addEventListener("click", async () => {
+            const o = orders.find((x) => x.id === detailId);
+            if (!o || !confirm(`Xóa đơn hàng ${o.code} của ${o.customer}? Thao tác này không thể hoàn tác.`)) return;
+            try {
+                await deleteDoc(doc(db, "orders", o.id));
+                detailDialog.close();
+            } catch (e) {
+                console.error("Lỗi khi xóa: ", e);
+                alert("Không xóa được đơn hàng: " + e.message);
+            }
+        });
+
+        // ---------- In lệnh sản xuất ----------
+        $("#btnPrint").addEventListener("click", () => {
+            const o = orders.find((x) => x.id === detailId);
+            if (!o) return;
+            const t = orderTotals(o);
+            let totalFrame = 0;
+
+            const rows = (o.items || []).map((it, i) => {
+                // Ước tính chiều dài nhôm khung bao = chu vi × số lượng
+                const frame = 2 * ((Number(it.width) || 0) + (Number(it.height) || 0)) / 1000 * (Number(it.qty) || 0);
+                totalFrame += frame;
+                return `
+                    <tr>
+                        <td>${i + 1}</td>
+                        <td>${escapeHtml(it.product)}</td>
+                        <td>${escapeHtml(it.profile)}</td>
+                        <td>${escapeHtml(it.glass)}</td>
+                        <td class="num">${escapeHtml(it.width)}</td>
+                        <td class="num">${escapeHtml(it.height)}</td>
+                        <td class="num">${escapeHtml(it.qty)}</td>
+                        <td class="num">${fmtArea(itemArea(it))}</td>
+                        <td class="num">${fmtLength(frame)}</td>
+                        <td></td>
+                    </tr>`;
+            }).join("");
+
+            $("#printArea").innerHTML = `
+                <h1>LỆNH SẢN XUẤT CỬA NHÔM KÍNH</h1>
+                <div class="sub">Mã đơn: <b>${escapeHtml(o.code)}</b> · Ngày in: ${fmtDateTime(Date.now())}</div>
+                <table class="info">
+                    <tr><td>Khách hàng: <b>${escapeHtml(o.customer)}</b></td><td>Điện thoại: ${escapeHtml(o.phone) || "—"}</td></tr>
+                    <tr><td>Địa chỉ lắp đặt: ${escapeHtml(o.address) || "—"}</td><td>Ngày giao: <b>${fmtDate(o.deadline)}</b></td></tr>
+                    <tr><td>Màu nhôm: <b>${escapeHtml(o.color) || "—"}</b></td><td>Công đoạn hiện tại: ${escapeHtml(stageName(o.stage))}</td></tr>
+                </table>
+                <table>
+                    <thead>
+                        <tr><th>#</th><th>Loại sản phẩm</th><th>Hệ nhôm</th><th>Kính</th><th>Rộng (mm)</th><th>Cao (mm)</th><th>SL</th><th>Diện tích</th><th>Nhôm khung bao (ước tính)</th><th>Ghi chú</th></tr>
+                    </thead>
+                    <tbody>${rows}</tbody>
+                    <tfoot>
+                        <tr><th colspan="7" class="num">Tổng cộng</th><th class="num">${fmtArea(t.area)}</th><th class="num">${fmtLength(totalFrame)}</th><th></th></tr>
+                    </tfoot>
+                </table>
+                ${o.note ? `<p><b>Ghi chú:</b> ${escapeHtml(o.note)}</p>` : ""}
+                <div class="sign">
+                    <div><b>Người lập phiếu</b><br><i>(Ký, ghi rõ họ tên)</i></div>
+                    <div><b>Tổ trưởng sản xuất</b><br><i>(Ký, ghi rõ họ tên)</i></div>
+                    <div><b>Kiểm tra chất lượng</b><br><i>(Ký, ghi rõ họ tên)</i></div>
+                </div>`;
+
+            detailDialog.close();
+            window.print();
+        });
+
+        // Đóng hộp thoại bằng các nút có thuộc tính data-close
+        document.addEventListener("click", (e) => {
+            const btn = e.target.closest("[data-close]");
+            if (btn) btn.closest("dialog").close();
+        });
+
+        // ---------- Lắng nghe dữ liệu thời gian thực từ Firebase ----------
+        onSnapshot(ordersCol, (snapshot) => {
+            orders = snapshot.docs.map((d) => {
+                const data = d.data();
+                const stage = STAGES.some((s) => s.id === data.stage) ? data.stage : STAGES[0].id;
+                return { ...data, id: d.id, stage };
+            });
+
+            // Đơn gần hạn giao lên trước, đơn chưa có hạn xếp cuối
+            orders.sort((a, b) => {
+                if (a.deadline && b.deadline && a.deadline !== b.deadline) return a.deadline < b.deadline ? -1 : 1;
+                if (a.deadline && !b.deadline) return -1;
+                if (!a.deadline && b.deadline) return 1;
+                return (a.createdAt || 0) - (b.createdAt || 0);
+            });
+
+            $("#errorBanner").classList.add("hidden");
+            render();
+            if (detailDialog.open) renderDetail();
+        }, (err) => {
+            console.error("Lỗi khi tải dữ liệu: ", err);
+            showError("Không tải được dữ liệu từ Firebase: " + err.message + ". Hãy kiểm tra Firestore Rules cho collection \"orders\".");
+            board.innerHTML = "";
+        });
     </script>
 </body>
 </html>
